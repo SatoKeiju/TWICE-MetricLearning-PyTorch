@@ -1,24 +1,47 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.manifold import TSNE
+
 import torch
+from torch.utils.data import DataLoader
+
+from torchsummary import summary
+
+from datasets import *
+from models import *
+from parameters import args
 
 
-def test(args, model, test_loader, criterion):
+if __name__ == '__main__':
+    test_dic = make_datapath_dic('test')
+    transform = ImageTransform(64)
+    test_dataset = TripletDataset(test_dic, transform=transform, phase='test')
+    batch_size = 32
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
+
+    device = 'cuda' if torch.cuda.is_available() else 'cpu'
+    model = TripletNet().to(device)
     model.eval()
-    test_loss = 0
-    correct = 0
+    model_weights = '0.14895377705494564.pth'
+    model.load_state_dict(torch.load(model_weights))
+
+    summary(model, (3, 64, 64))
+
+    predicted_metrics = []
+    test_labels = []
     with torch.no_grad():
-        for anchor, positive, negative, anchor_label in test_loader:
-            anc_embedding = model(anchor)
-            pos_embedding = model(positive)
-            neg_embedding = model(negative)
-            test_loss += criterion().item()
-            pred = output.argmax(dim=1, keepdim=True)
-            correct += pred.eq(target.view_as(pred)).sum().item()
-    num_dataset = len(test_loader.dataset)
-    test_loss /= num_dataset
-    accuracy = correct / num_dataset
+        for i, (anchor, _, _, label) in enumerate(test_dataloader):
+            metric = model(anchor).detach().cpu().numpy()
+            metric = metric.reshape(metric.shape[0], metric.shape[1])
+            predicted_metrics.append(metric)
+            test_labels.append(label.detach().numpy())
 
-    print(f'\nTest set:')
-    print(f'Average loss: {test_loss}')
-    print(f'Accuracy: {correct} / {num_dataset} ({accuracy*100})\n')
+    predicted_metrics = np.concatenate(predicted_metrics, 0)
+    test_labels = np.concatenate(test_labels, 0)
 
-    return test_loss, accuracy
+    tSNE_metrics = TSNE(n_components=2, random_state=0).fit_transform(predicted_metrics)
+
+    plt.scatter(tSNE_metrics[:, 0], tSNE_metrics[:, 1], c=test_labels)
+    plt.colorbar()
+    plt.savefig(model_weights + '.png')
+    plt.show()

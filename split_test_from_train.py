@@ -53,5 +53,6 @@ class DataSeparator():
                 shutil.move(chosen_data_path, move_to)
 
 
-d = DataSeparator()
-d.move_to_test()
+if __name__ == '__main__':
+    d = DataSeparator()
+    d.move_to_test()

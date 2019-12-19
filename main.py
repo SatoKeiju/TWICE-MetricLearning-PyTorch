@@ -24,19 +24,27 @@ def main():
     train_dic = make_datapath_dic('train')
     test_dic = make_datapath_dic('test')
 
+    train_list = make_datapath_list('train')
+    test_list = make_datapath_list('test')
+
     transform = ImageTransform(64)
 
-    train_dataset = TripletDataset(train_dic, transform=transform, phase='train')
-    test_dataset = TripletDataset(test_dic, transform=transform, phase='test')
+    train_dataset = MyDataset(train_list, transform=transform, phase='train')
+    test_dataset = MyDataset(test_list, transform=transform, phase='test')
 
-    batch_size = 12
+    # train_dataset = TripletDataset(train_dic, transform=transform, phase='train')
+    # test_dataset = TripletDataset(test_dic, transform=transform, phase='test')
+
+    batch_size = 64
     train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False)
 
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
-    model = TripletNet().to(device)
-    criterion = TripletLoss()
-    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
+    model = TripletResNet(9).to(device)
+    # model = TripletResNet(128).to(device)
+    criterion = nn.CrossEntropyLoss()
+    # criterion = TripletLoss()
+    optimizer = optim.SGD(model.parameters(), lr=args.lr, weight_decay=1e-4)
     # optimizer = optim.Adam(model.parameters(), lr=0.001)
 
     summary(model, (3, 64, 64))
@@ -56,17 +64,17 @@ def main():
         # )
 
         x_epoch_data.append(epoch)
-        # y_train_loss_data.append(train_loss_per_epoch)
+        y_train_loss_data.append(train_loss_per_epoch)
         # y_test_loss_data.append(test_loss_per_epoch)
         # y_test_accuracy_data.append(test_accuracy_per_epoch)
 
-    # plt.plot(x_epoch_data, y_train_loss_data, color='blue', label='train_loss')
-    # plt.xlabel('epoch')
-    # plt.ylabel('loss')
-    # plt.legend(loc='upper right')
-    # plt.title('loss')
-    # plt.show()
-    #
+    plt.plot(x_epoch_data, y_train_loss_data, color='blue', label='train_loss')
+    plt.xlabel('epoch')
+    plt.ylabel('loss')
+    plt.legend(loc='upper right')
+    plt.title('loss')
+    plt.show()
+
     # plt.plot(x_epoch_data, y_test_loss_data, color='red', label='test_loss')
     # plt.xlabel('epoch')
     # plt.ylabel('loss')
@@ -81,8 +89,8 @@ def main():
     # plt.show()
 
     if args.save_model:
-        torch.save(model.state_dict(), 'TripletNetwork.pt')
-        print('Saved model as TripletNetwork.pt')
+        torch.save(model.state_dict(), 'TWICE-Triplet.pt')
+        print('Saved model as TWICE-Triplet.pt')
 
 
 if __name__ == '__main__':

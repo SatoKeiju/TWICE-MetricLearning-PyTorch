@@ -40,40 +40,18 @@ class ImageTransform():
     def __init__(self, resize):
         self.data_transform = {
             'train': transforms.Compose([
+                transforms.RandomHorizontalFlip(),
                 transforms.ToTensor(),
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                transforms.Normalize((0.5, 0.5, 0.5), (0.2, 0.2, 0.2))
             ]),
             'test': transforms.Compose([
                 transforms.ToTensor(),
-                transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))
+                transforms.Normalize((0.5, 0.5, 0.5), (0.2, 0.2, 0.2))
             ])
         }
 
     def __call__(self, img, phase='train'):
         return self.data_transform[phase](img)
-
-
-class MyDataset(Dataset):
-    def __init__(self, file_list, transform=None, phase='train'):
-        self.file_list = file_list
-        self.transform = transform
-        self.phase = phase
-
-    def __len__(self):
-        return len(self.file_list)
-
-    def __getitem__(self, idx):
-        img_path = self.file_list[idx]
-        img = Image.open(img_path)
-        img_transformed = self.transform(img, self.phase)
-        if 'circle' in img_path:
-            label = 0
-        elif 'rectangle' in img_path:
-            label = 1
-        elif 'triangle' in img_path:
-            label = 2
-
-        return img_transformed, label
 
 
 class TripletDataset(Dataset):
@@ -110,3 +88,38 @@ class TripletDataset(Dataset):
         negative = self.transform(Image.open(negative_path), self.phase)
 
         return anchor, positive, negative, anchor_label
+
+
+class MyDataset(Dataset):
+    def __init__(self, file_list, transform=None, phase='train'):
+        self.file_list = file_list
+        self.transform = transform
+        self.phase = phase
+
+    def __len__(self):
+        return len(self.file_list)
+
+    def __getitem__(self, idx):
+        img_path = self.file_list[idx]
+        img = Image.open(img_path)
+        img_transformed = self.transform(img, self.phase)
+        if 'NAYEON' in img_path:
+            label = 0
+        elif 'JEONGYEON' in img_path:
+            label = 1
+        elif 'MOMO' in img_path:
+            label = 2
+        elif 'SANA' in img_path:
+            label = 3
+        elif 'JIHYO' in img_path:
+            label = 4
+        elif 'MINA' in img_path:
+            label = 5
+        elif 'DAHYUN' in img_path:
+            label = 6
+        elif 'CHAEYOUNG' in img_path:
+            label = 7
+        elif 'TZUYU' in img_path:
+            label = 8
+
+        return img_transformed, label
