@@ -1,5 +1,7 @@
 .DS_Store
 *.png
+*.pt
+*.pth
 
 data/
 experiment/
